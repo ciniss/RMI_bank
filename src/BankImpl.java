@@ -1,6 +1,8 @@
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.security.SecureRandom;
@@ -12,7 +14,7 @@ public class BankImpl extends UnicastRemoteObject implements BankInterface {
     private static final SecureRandom secRand = new SecureRandom();
     private final List<ClientInfo> clients = new ArrayList<>();
     public BankImpl() throws RemoteException{}
-
+    private final List<String> history = new ArrayList<>();
     public ClientInfo register(ClientInfo client){
         clients.add(client);
         return client;
@@ -33,30 +35,45 @@ public class BankImpl extends UnicastRemoteObject implements BankInterface {
         ClientInfo client = get(pesel);
         for(int i = 0;i < 6;i++){
             String pswd = generatePassword();
-            while(client.addPassword(pswd)){
+            while(!client.addPassword(pswd)){
                 pswd = generatePassword();
             }
             System.out.println("Added password for user: "+pesel + " with password: "+pswd);
         }
+        System.out.println(get(pesel).passwords.size() + " passwords were added");
+        history.add("PASSWORD GENERATION"+getTimestamp()+" USER: "+pesel);
     }
 
     @Override
     public boolean przelew(String nrKontaSRC, String nrKontaTRG, double amount, String password) {
-        ClientInfo clientSRC = clients.stream().filter(clientInfo -> Objects.equals(clientInfo.getNrKonta(), nrKontaSRC)).toList().getFirst();
-        ClientInfo clientTRG = clients.stream().filter(clientInfo -> Objects.equals(clientInfo.getNrKonta(), nrKontaTRG)).toList().getFirst();
+        ClientInfo clientSRC = clients.stream().filter(clientInfo -> clientInfo.getNrKonta().equals( nrKontaSRC)).toList().getFirst();
+        ClientInfo clientTRG = clients.stream().filter(clientInfo -> clientInfo.getNrKonta().equals(nrKontaTRG)).toList().getFirst();
         if(clientSRC.getOszczednosci() < amount){
+            history.add("TRANSACTION DENIED INSUFFICIENT FUNDS"+getTimestamp()+" FROM: "+nrKontaSRC+" TO: "+nrKontaTRG+"; AMOUNT: "+amount);
             return false;
         }
         if(clientSRC.consumePassword(password)){
             clientSRC.subtractMoney(amount);
             clientTRG.addMoney(amount);
+
+            history.add("TRANSACTION "+getTimestamp()+" FROM: "+nrKontaSRC+" TO: "+nrKontaTRG+"; AMOUNT: "+amount);
             return true;
         }
         else{
             System.out.println("Niepoprawne hasło");
-            //throw error
+            history.add("TRANSACTION DENIED WRONG PASSWORD "+getTimestamp()+" FROM: "+nrKontaSRC+" TO: "+nrKontaTRG+"; AMOUNT: "+amount);
         }
         return false;
+    }
+
+    @Override
+    public void showBankHistory() {
+        this.history.forEach(System.out::println);
+    }
+
+    @Override
+    public boolean validateUser(String nrKonta, String pesel) throws RemoteException {
+        return clients.stream().anyMatch(client -> (client.getPesel().equals(pesel) && client.getNrKonta().equals(nrKonta)));
     }
 
     public boolean peselAvilable(String pesel) throws RemoteException {
@@ -76,7 +93,7 @@ public class BankImpl extends UnicastRemoteObject implements BankInterface {
                 //throw error;
             }
             ClientInfo client = register(new ClientInfo(imie, nazwisko, pesel, nrKonta, oszczednosci));
-
+            history.add("USER CREATED "+getTimestamp()+" NAME: " + imie+" "+nazwisko + " AMOUNT: " + oszczednosci);
             System.out.println("zarejestrowano: "+client);
             System.out.println("lacznie w calym banku: "+total()+" zł");
             System.out.println("dane klienta: "+get(pesel));
@@ -98,5 +115,10 @@ public class BankImpl extends UnicastRemoteObject implements BankInterface {
             sb.append(allowedChars.charAt(index));
         }
         return sb.toString();
+    }
+    private String getTimestamp(){
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyy HH:mm:ss.SSS");
+        return "["+formatter.format(now)+"]";
     }
 }

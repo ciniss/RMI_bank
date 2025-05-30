@@ -6,5 +6,7 @@ public interface BankInterface extends Remote {
     double total () throws RemoteException;
     ClientInfo get (String pesel) throws RemoteException;
     void generatePasswords (String pesel) throws RemoteException;
-    boolean przelew(String nrKontaSRC, String nrKontaTRG, double amount, String password);
+    boolean przelew(String nrKontaSRC, String nrKontaTRG, double amount, String password) throws RemoteException;
+    void showBankHistory() throws RemoteException;
+    boolean validateUser(String nrKonta, String pesel) throws RemoteException;
 }

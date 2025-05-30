@@ -20,11 +20,14 @@ public class RMIServer {
         Naming.rebind("//localhost:1099/Bank", new BankImpl());
         System.out.println("System bankowy gotowy do działania.");
         BankInterface bank = (BankInterface) Naming.lookup("rmi://localhost:1099/Bank");
+        bank.registerUser("Baltazar", "Gąbka", "12345678901", 100.13);
+        bank.registerUser("Andrzej", "Makłowicz", "12345678902", 4100.13);
         while(true){
             System.out.println("Wybierz: ");
             Scanner in = new Scanner(System.in);
             System.out.println("1. Dodaj użytkownika");
             System.out.println("2. Dodaj hasło użytkownikowi");
+            System.out.println("3. Pokaż historie banku");
             String option = in.nextLine();
             if(option.equals("1")){
                 System.out.print("imie: ");
@@ -41,6 +44,9 @@ public class RMIServer {
                 System.out.print("Podaj pesel: ");
                 String pesel = in.nextLine();
                 bank.generatePasswords(pesel);
+            }
+            else if(option.equals("3")){
+                bank.showBankHistory();
             }
             else{
                 System.out.println("Niepoprawna opcja");

@@ -26,7 +26,7 @@ public class ClientInfo implements Serializable {
         return oszczednosci;
     }
 
-    private final ArrayList<String> passwords;
+    public final ArrayList<String> passwords;
 
     public ClientInfo(String imie, String nazwisko, String PESEL, String nrKonta, double oszczednosci) {
         //brak walidacji konta bankowego ponieważ jest nie ma możliwości wprowadzenia błędnego.
@@ -55,7 +55,7 @@ public class ClientInfo implements Serializable {
         return imie+" "+nazwisko+" ("+pesel+") – "+oszczednosci+" zł ["+nrKonta+"]";
     }
     public boolean addPassword(String password){
-        if(this.passwords.contains(password)){
+        if(passwordAvilable(password)){
             this.passwords.add(password);
             return true;
         }
