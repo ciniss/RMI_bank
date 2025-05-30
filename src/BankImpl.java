@@ -76,6 +76,11 @@ public class BankImpl extends UnicastRemoteObject implements BankInterface {
         return clients.stream().anyMatch(client -> (client.getPesel().equals(pesel) && client.getNrKonta().equals(nrKonta)));
     }
 
+    @Override
+    public void showUser(String pesel) throws RemoteException {
+        System.out.println(clients.stream().filter(client -> client.getPesel().equals(pesel)).findFirst());
+    }
+
     public boolean peselAvilable(String pesel) throws RemoteException {
         return clients.stream().noneMatch(client -> client.getPesel().equals(pesel));
     }

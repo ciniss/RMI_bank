@@ -28,6 +28,7 @@ public class RMIServer {
             System.out.println("1. Dodaj użytkownika");
             System.out.println("2. Dodaj hasło użytkownikowi");
             System.out.println("3. Pokaż historie banku");
+            System.out.println("4. Pokaż użytkownika");
             String option = in.nextLine();
             if(option.equals("1")){
                 System.out.print("imie: ");
@@ -47,6 +48,11 @@ public class RMIServer {
             }
             else if(option.equals("3")){
                 bank.showBankHistory();
+            }
+            else if(option.equals("4")){
+                System.out.print("Podaj pesel: ");
+                String pesel = in.nextLine();
+                bank.showUser(pesel);
             }
             else{
                 System.out.println("Niepoprawna opcja");
