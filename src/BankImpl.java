@@ -44,6 +44,13 @@ public class BankImpl extends UnicastRemoteObject implements BankInterface {
         history.add("PASSWORD GENERATION"+getTimestamp()+" USER: "+pesel);
     }
 
+     @Override
+     public List<String> getPasswords(String pesel) throws RemoteException {
+        ClientInfo client = get(pesel);
+        // zwracamy kopię listy, żeby nie dać dostępu do wewnętrznej struktury
+         return new ArrayList<>(client.passwords);
+     }
+
     @Override
     public boolean przelew(String nrKontaSRC, String nrKontaTRG, double amount, String password) {
         ClientInfo clientSRC = clients.stream().filter(clientInfo -> clientInfo.getNrKonta().equals( nrKontaSRC)).toList().getFirst();
@@ -97,11 +104,19 @@ public class BankImpl extends UnicastRemoteObject implements BankInterface {
                 System.out.println("PESEL ZNAJDUJE SIE W BAZIE DANYCH");
                 //throw error;
             }
-            ClientInfo client = register(new ClientInfo(imie, nazwisko, pesel, nrKonta, oszczednosci));
-            history.add("USER CREATED "+getTimestamp()+" NAME: " + imie+" "+nazwisko + " AMOUNT: " + oszczednosci);
-            System.out.println("zarejestrowano: "+client);
-            System.out.println("lacznie w calym banku: "+total()+" zł");
-            System.out.println("dane klienta: "+get(pesel));
+            ClientInfo client = ClientInfo.createUser(imie, nazwisko, pesel, nrKonta, oszczednosci);
+            if(client != null){
+                register(client);
+                history.add("USER CREATED "+getTimestamp()+" NAME: " + imie+" "+nazwisko + " AMOUNT: " + oszczednosci);
+                System.out.println("zarejestrowano: "+client);
+                System.out.println("lacznie w calym banku: "+total()+" zł");
+                System.out.println("dane klienta: "+get(pesel));
+            }
+            else{
+                history.add("USER NOT CREATED "+getTimestamp());
+                System.out.println("Błąd w dodaniu klienta. Nieprawidłowo wprowadzone dane.");
+            }
+
     }
     private String generateNrKonta(){
         String allowedChars = "0123456789";
